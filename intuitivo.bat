@@ -1,5 +1,6 @@
+```bat
 @echo off
-setlocal
+setlocal EnableDelayedExpansion
 
 title Instalador e Executor - Projeto Python
 
@@ -8,9 +9,11 @@ echo     INSTALADOR E EXECUTOR AUTOMATICO
 echo ==========================================
 echo.
 
-REM ==============================
-REM Encontrar Python
-REM ==============================
+REM ============================================================
+REM 1. VERIFICAR PYTHON
+REM ============================================================
+
+echo [1/6] Verificando Python...
 
 where py >nul 2>&1
 
@@ -26,10 +29,83 @@ if %errorlevel%==0 (
     goto PYTHON_OK
 )
 
-echo [ERRO] Python nao encontrado!
 echo.
-echo Instale Python 3.11 ou superior:
-echo https://www.python.org/downloads/windows/
+echo [AVISO] Python nao encontrado.
+echo.
+echo Tentando instalar automaticamente...
+echo.
+
+REM ============================================================
+REM 2. VERIFICAR WINGET
+REM ============================================================
+
+where winget >nul 2>&1
+
+if %errorlevel% neq 0 (
+    echo [ERRO] O winget nao foi encontrado.
+    echo.
+    echo Este Windows nao possui o gerenciador de pacotes winget.
+    echo.
+    echo Instale o Python manualmente:
+    echo https://www.python.org/downloads/windows/
+    echo.
+    pause
+    exit /b 1
+)
+
+echo [OK] winget encontrado.
+echo.
+echo Instalando Python...
+echo.
+
+REM ============================================================
+REM 3. INSTALAR PYTHON
+REM ============================================================
+
+winget install --id Python.Python.3.12 -e --scope user --accept-source-agreements --accept-package-agreements
+
+if errorlevel 1 (
+    echo.
+    echo [ERRO] Falha ao instalar Python.
+    echo.
+    pause
+    exit /b 1
+)
+
+echo.
+echo [OK] Python instalado.
+echo.
+
+REM ============================================================
+REM ATUALIZAR PATH DA SESSAO
+REM ============================================================
+
+echo Atualizando PATH...
+
+set "PATH=%PATH%;%LocalAppData%\Programs\Python\Python312;%LocalAppData%\Programs\Python\Python312\Scripts"
+
+REM ============================================================
+REM VERIFICAR NOVAMENTE
+REM ============================================================
+
+where py >nul 2>&1
+
+if %errorlevel%==0 (
+    set "PY=py"
+    goto PYTHON_OK
+)
+
+where python >nul 2>&1
+
+if %errorlevel%==0 (
+    set "PY=python"
+    goto PYTHON_OK
+)
+
+echo.
+echo [ERRO] Python foi instalado, mas nao foi encontrado.
+echo.
+echo Feche este terminal e execute o .bat novamente.
 echo.
 pause
 exit /b 1
@@ -37,61 +113,73 @@ exit /b 1
 
 :PYTHON_OK
 
+echo.
 echo [OK] Python encontrado:
 %PY% --version
 echo.
 
 
-REM ==============================
-REM Criar ambiente virtual
-REM ==============================
+REM ============================================================
+REM 4. CRIAR AMBIENTE VIRTUAL
+REM ============================================================
+
+echo [2/6] Verificando ambiente virtual...
 
 if not exist ".venv" (
 
-    echo [1/4] Criando ambiente virtual...
+    echo Criando ambiente virtual...
 
     %PY% -m venv .venv
 
     if errorlevel 1 (
+        echo.
         echo [ERRO] Falha ao criar ambiente virtual.
+        echo.
         pause
         exit /b 1
     )
 
+    echo [OK] Ambiente virtual criado.
+
 ) else (
 
-    echo [1/4] Ambiente virtual ja existe.
+    echo [OK] Ambiente virtual ja existe.
 
 )
 
 echo.
 
 
-REM ==============================
-REM Atualizar pip
-REM ==============================
+REM ============================================================
+REM 5. ATUALIZAR PIP
+REM ============================================================
 
-echo [2/4] Atualizando pip...
+echo [3/6] Atualizando pip...
 
 call ".venv\Scripts\python.exe" -m pip install --upgrade pip
 
 if errorlevel 1 (
+    echo.
     echo [ERRO] Falha ao atualizar pip.
+    echo.
     pause
     exit /b 1
 )
 
+echo [OK] pip atualizado.
 echo.
 
 
-REM ==============================
-REM Instalar dependencias
-REM ==============================
+REM ============================================================
+REM 6. INSTALAR DEPENDENCIAS
+REM ============================================================
 
-echo [3/4] Instalando dependencias...
+echo [4/6] Instalando dependencias...
 
 if not exist "requirements.txt" (
+    echo.
     echo [ERRO] requirements.txt nao encontrado!
+    echo.
     pause
     exit /b 1
 )
@@ -99,38 +187,60 @@ if not exist "requirements.txt" (
 call ".venv\Scripts\python.exe" -m pip install -r requirements.txt
 
 if errorlevel 1 (
+    echo.
     echo [ERRO] Falha ao instalar dependencias.
+    echo.
     pause
     exit /b 1
 )
 
 echo.
+echo [OK] Dependencias instaladas.
+echo.
 
-REM ==============================
-REM Executar projeto
-REM ==============================
 
-echo [4/5] Iniciando projeto...
+REM ============================================================
+REM 7. EXECUTAR PROJETO
+REM ============================================================
+
+echo [5/6] Iniciando projeto...
 echo.
 echo ==========================================
 echo             PROJETO INICIADO
 echo ==========================================
 echo.
 
+if not exist "main.py" (
+    echo [ERRO] main.py nao encontrado!
+    echo.
+    pause
+    exit /b 1
+)
+
 ".venv\Scripts\python.exe" main.py
 
-
-REM ==============================
-REM Abrir dashboard
-REM ==============================
-
 echo.
-echo [5/5] Abrindo dashboard...
+echo ==========================================
+echo           PROJETO FINALIZADO
+echo ==========================================
+echo.
+
+
+REM ============================================================
+REM 8. ABRIR DASHBOARD
+REM ============================================================
+
+echo [6/6] Abrindo dashboard...
 
 if exist "dashboard_percepcao.html" (
+
+    echo [OK] Abrindo dashboard...
     start "" "dashboard_percepcao.html"
+
 ) else (
+
     echo [AVISO] dashboard_percepcao.html nao encontrado!
+
 )
 
 echo.
@@ -140,3 +250,4 @@ echo ==========================================
 echo.
 
 pause
+```
