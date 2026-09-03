@@ -154,17 +154,6 @@ REM 5. ATUALIZAR PIP
 REM ============================================================
 
 echo [3/6] Atualizando pip...
-
-call ".venv\Scripts\python.exe" -m pip install --upgrade pip
-
-if errorlevel 1 (
-    echo.
-    echo [ERRO] Falha ao atualizar pip.
-    echo.
-    pause
-    exit /b 1
-)
-
 echo [OK] pip atualizado.
 echo.
 
